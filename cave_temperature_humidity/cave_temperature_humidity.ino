@@ -21,13 +21,21 @@
 |               DATA  ->  UNO PIN 2                                 |
 |               4K7 Resistor VDD -> DATA                            | 
 |                                                                   |
-|  TIMER                                                            |
+|  TIME                                                             |
 |  Component:   Chronodot Real Time Clock                           |
 |               https://docs.macetech.com/doku.php/chronodot_v3.0   |
 |  Connections: GND   ->  UNO GND                                   |
 |               VCC   ->  UNO 5V                                    |
 |               SCL   ->  UNO A5                                    |
 |               SDA   ->  UNO A4                                    |
+|                                                                   |
+|  HUMIDITY                                                         |
+|  Component:   DHT22 Temperature and Humidity Sensor               |
+|               https://www.robotics.org.za/DHT22-IC                |
+|  Connections: GND  -> UNO GND                                     |
+|               VCC  -> UNO 5V                                      |
+|               DATA -> UBO PIN 7                                   |
+|               10K Resistor VCC -> DATA                            |
 |                                                                   |
 -------------------------------------------------------------------*/
 
@@ -36,12 +44,16 @@
 #include <SD.h>
 #include <OneWire.h>
 #include <RTClib.h>
+#include <dht.h>
+
 
 const int chipSelect_sd = 4;
 #define ONE_WIRE_BUS 8
+#define dataPin 7 
 
 OneWire oneWire(ONE_WIRE_BUS);
 RTC_DS3231 rtc;
+dht DHT;
 
 float temperature;
 String filename;
@@ -62,9 +74,14 @@ void loop() {
     Serial.println(filename);
     temperature  = temperature_18B20_read();    
 
+    int readData = DHT.read22(dataPin); 
+    float dht_temperature = DHT.temperature; 
+    float humidity = DHT.humidity;
+    
     DateTime now = rtc.now();
-    log_line =  now.timestamp() + ", " + String(temperature);
-    write_sd(filename, log_line);
+    log_line =  now.timestamp() + ", " + String(temperature) + ", " + String(dht_temperature) + ", " + humidity;
+    Serial.println(log_line);
+    write_sd(filename, log_line);    
 }
 
 String get_file_name() {
